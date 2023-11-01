@@ -82,7 +82,7 @@ class Connect4:
         average_radius = int(average_radius)
 
         # Use Hough Transform to detect circles
-        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=average_radius, param1=200, param2=20,
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=average_radius*2, param1=200, param2=20,
                                 minRadius=min_radius, maxRadius=max_radius)
         if circles is None:
             raise ValueError('No circles found!')
@@ -112,27 +112,15 @@ class Connect4:
         sorted_circles = [circle for _, circle in sorted(zip(labels, circles[0]), key=lambda c: (c[0], c[1][0]))]
         return sorted_circles
 
-    def check_winner(board):
-        patterns = ['RRRR', 'YYYY']
-        # Check rows
-        for row in board:
-            for pattern in patterns:
-                if pattern in ''.join(row):
-                    return pattern[0]
-        # Check columns
-        for col in board.T:
-            for pattern in patterns:
-                if pattern in ''.join(col):
-                    return pattern[0]
-        # Check diagonals
-        diagonals = [board.diagonal(i) for i in range(-3, 4)]
-        antidiagonals = [np.fliplr(board).diagonal(i) for i in range(-3, 4)]
-        for diagonal in diagonals + antidiagonals:
-            for pattern in patterns:
-                if pattern in ''.join(diagonal):
-                    return pattern[0]
-        return None
+    def get_board(self):
+        return self.board
     
+    def set_radius(self, radius):
+        self.piece_radius = radius
+        
+    def set_radius_delta(self, radius_delta):
+        self.radius_delta = radius_delta
+
     def draw_circles(self):
         circles_img = self.img.copy()
         for idx, (x, y, r) in enumerate(self.circles):
@@ -158,3 +146,25 @@ class Connect4:
                 continue
             cv2.rectangle(board_img, (col*50, row*50), ((col+1)*50, (row+1)*50), color, -1)
         return board_img
+    
+    @staticmethod
+    def check_winner(board):
+        patterns = ['RRRR', 'YYYY']
+        # Check rows
+        for row in board:
+            for pattern in patterns:
+                if pattern in ''.join(row):
+                    return pattern[0]
+        # Check columns
+        for col in board.T:
+            for pattern in patterns:
+                if pattern in ''.join(col):
+                    return pattern[0]
+        # Check diagonals
+        diagonals = [board.diagonal(i) for i in range(-3, 4)]
+        antidiagonals = [np.fliplr(board).diagonal(i) for i in range(-3, 4)]
+        for diagonal in diagonals + antidiagonals:
+            for pattern in patterns:
+                if pattern in ''.join(diagonal):
+                    return pattern[0]
+        return None
